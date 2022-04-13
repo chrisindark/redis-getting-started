@@ -85,3 +85,12 @@ SET James Madison
 SET Andrew Jackson
 GET John
 GET John Adams
+
+```shell
+# Clone the Repo
+$ git clone
+# Move to the folder
+$ cd create-redis-cluster
+# Execute bash file
+$ sh create-redis-cluster.sh
+```
