@@ -94,3 +94,10 @@ $ cd create-redis-cluster
 # Execute bash file
 $ sh create-redis-cluster.sh
 ```
+
+With Redis persistence, the storage gets full due to RDB backups and AOF saving.
+To deal with replica sync failures:
+login into the shell
+run du -h
+cd /<folder*name>
+rm -rf temp*<number>.rdb files
