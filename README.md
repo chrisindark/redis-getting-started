@@ -101,3 +101,42 @@ login into the shell
 run du -h
 cd /<folder*name>
 rm -rf temp*<number>.rdb files
+
+### redis-cli INFO keyspace
+
+### redis-cli KEYS \* | xargs --max-procs=16 -L 100 redis-cli DEL
+
+It list all Keys in redis, then pass using xargs to redis-cli DEL, using max 100 Keys per command, but running 16 command at time, very fast and useful when there is not FLUSHDB or FLUSHALL due to security reasons, for example when using Redis from Bitnami in Docker or Kubernetes.
+
+# User-supplied common configuration:
+
+    # Enable AOF https://redis.io/topics/persistence#append-only-file
+    appendonly yes
+    # Disable RDB persistence, AOF persistence already enabled.
+    save ""
+    # Lets the operating system control syncing to disk.
+    appendfsync no
+    # Redis will remember the AOF file size after the last AOF rewrite operation. If the current AOF file size has increased by this percentage value, another AOF rewrite will be triggered. Setting this value to 0 will disable Automatic AOF Rewrite. The default value is 100.
+    auto-aof-rewrite-percentage 100
+    # An AOF rewrite will not be triggered if the AOF file size is less than this value. The default value is 64 MB.
+    auto-aof-rewrite-min-size 64mb
+    # End of common configuration
+
+# Backing up AOF persistence
+
+If you run a Redis instance with only AOF persistence enabled, you can still perform backups. Since Redis 7.0.0, AOF files are split into multiple files which reside in a single directory determined by the appenddirname configuration. During normal operation all you need to do is copy/tar the files in this directory to achieve a backup. However, if this is done during a rewrite, you might end up with an invalid backup. To work around this you must disable AOF rewrites during the backup:
+
+Turn off automatic rewrites with
+CONFIG SET auto-aof-rewrite-percentage 0
+Make sure you don't manually start a rewrite (using BGREWRITEAOF) during this time.
+Check there's no current rewrite in progress using
+INFO persistence
+and verifying aof_rewrite_in_progress is 0. If it's 1, then you'll need to wait for the rewrite to complete.
+Now you can safely copy the files in the appenddirname directory.
+Re-enable rewrites when done:
+CONFIG SET auto-aof-rewrite-percentage <prev-value>
+
+# kubectl restart pods of statefulset after updating redis configuration
+
+k rollout restart statefulset redis-common-master
+k rollout restart statefulset redis-common-replicas
