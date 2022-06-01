@@ -104,6 +104,8 @@ rm -rf temp*<number>.rdb files
 
 ### redis-cli INFO keyspace
 
+### redis-cli --scan | while read LINE ; do TTL=`redis-cli ttl "$LINE"`; if [ $TTL -eq -1 ]; then echo "$LINE"; fi; done;
+
 ### redis-cli KEYS \* | xargs --max-procs=16 -L 100 redis-cli DEL
 
 It list all Keys in redis, then pass using xargs to redis-cli DEL, using max 100 Keys per command, but running 16 command at time, very fast and useful when there is not FLUSHDB or FLUSHALL due to security reasons, for example when using Redis from Bitnami in Docker or Kubernetes.
@@ -140,3 +142,17 @@ CONFIG SET auto-aof-rewrite-percentage <prev-value>
 
 k rollout restart statefulset redis-common-master
 k rollout restart statefulset redis-common-replicas
+
+# commands to check for connection events and clients connected to redis server
+
+k exec -n redis -it redis-common bash
+
+redis-cli
+
+subscribe connections.events
+
+CLIENT LIST
+
+# quick access for keys in production
+
+SCAN 0 MATCH \* LIMIT 100
